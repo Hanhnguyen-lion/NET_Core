@@ -97,6 +97,7 @@ namespace MyApi.Controllers{
             }
 
             // Map the user entity to ProfileDTO.
+#pragma warning disable CS8604 // Possible null reference argument.
             var profile = new ProfileDTO
             {
                 Id = user.Id,
@@ -105,6 +106,7 @@ namespace MyApi.Controllers{
                 Lastname = user.Lastname,
                 Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
             };
+#pragma warning restore CS8604 // Possible null reference argument.
 
             return Ok(profile);
         }

@@ -98,7 +98,9 @@ namespace MyApi.Controllers{
             }
 
             // Convert the Base64-encoded private key string back to a byte array
+#pragma warning disable CS8604 // Possible null reference argument.
             var privateKeyBytes = Convert.FromBase64String(signingKey.PrivateKey);
+#pragma warning restore CS8604 // Possible null reference argument.
 
             // Create a new RSA instance for cryptographic operations
             var rsa = RSA.Create();
@@ -117,6 +119,8 @@ namespace MyApi.Controllers{
             var creds = new SigningCredentials(rsaSecurityKey, SecurityAlgorithms.RsaSha256);
 
             // Initialize a list of claims to include in the JWT
+#pragma warning disable CS8604 // Possible null reference argument.
+#pragma warning disable CS8604 // Possible null reference argument.
             var claims = new List<Claim>
             {
                 // Subject (sub) claim with the user's ID
@@ -134,11 +138,15 @@ namespace MyApi.Controllers{
                 // Email claim with the user's email
                 new Claim(ClaimTypes.Email, user.Email)
             };
+#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8604 // Possible null reference argument.
 
             // Iterate through the user's roles and add each as a Role claim
             foreach (var userRole in user.UserRoles)
             {
+#pragma warning disable CS8604 // Possible null reference argument.
                 claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
+#pragma warning restore CS8604 // Possible null reference argument.
             }
 
             // Define the JWT token's properties, including issuer, audience, claims, expiration, and signing credentials

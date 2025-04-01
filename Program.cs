@@ -10,18 +10,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 var APICors = "ApiCORS";
-
-builder.Services.AddControllers()
+var services = builder.Services;
+services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     // Preserve property names as defined in the C# models (disable camelCase naming)
                     options.JsonSerializerOptions.PropertyNamingPolicy = null;
                 });
 
-builder.Services.AddOpenApi();
-builder.Services.AddEndpointsApiExplorer();
+services.AddOpenApi();
+services.AddEndpointsApiExplorer();
 
-builder.Services.AddCors(options =>
+services.AddCors(options =>
     options.AddPolicy(APICors, policy=>
     {
         policy.WithOrigins("*")
@@ -29,15 +29,19 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod();
     }));
 
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("PostgressConnectionDb")));
+// services.Configure<IConfiguration>(builder.Configuration.GetSection("ConnectionStrings"));
+// // services.Configure<DBSetting>(builder.Configuration.GetSection("DBSetting"));
+// services.AddSingleton<DatabaseContext>();
+
+services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("PostgressConnectionDb")));
 // builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("EFCoreDBConnection")));
 // builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //     options.UseSqlServer(builder.Configuration.GetConnectionString("EFCoreDBConnection")));
 // Register the KeyRotationService as a hosted (background) service
 // This service handles periodic rotation of signing keys to enhance security
-builder.Services.AddHostedService<KeyRotationService>();
+services.AddHostedService<KeyRotationService>();
 // Configure Authentication using JWT Bearer tokens
-builder.Services.AddAuthentication(options =>
+services.AddAuthentication(options =>
 {
     // This indicates the authentication scheme that will be used by default when the app attempts to authenticate a user.
     // Which authentication handler to use for verifying who the user is by default.

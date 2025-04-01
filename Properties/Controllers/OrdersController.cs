@@ -10,8 +10,8 @@ namespace MyApi.Controllers{
     public class OrdersController: ControllerBase{
 
         OrdersContextDb db; 
-        public OrdersController(){
-            db = new OrdersContextDb(); 
+        public OrdersController(IConfiguration configuration){
+            db = new OrdersContextDb(configuration); 
         }
 
         [HttpGet] 

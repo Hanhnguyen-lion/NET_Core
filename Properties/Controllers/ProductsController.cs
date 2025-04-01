@@ -10,9 +10,9 @@ namespace MyApi.Controllers{
     public class ProductsController: ControllerBase{
 
         ProductsContextDb db; 
-        public ProductsController(){
-            db = new ProductsContextDb(); 
-            // products = db.GetProducts().ToList<Product>();
+
+        public ProductsController(IConfiguration configuration){
+            db = new ProductsContextDb(configuration); 
         }
 
         [HttpGet] 
@@ -37,15 +37,25 @@ namespace MyApi.Controllers{
 
         [HttpPut("{id}")]
         public ActionResult<IEnumerable<Product>> Put(int id, [FromBody] Product product){
-            db.UpdateProduct(product: product);
-
-            return Ok();
+            var editProduct = db.GetProduct(id);
+            if (editProduct == null){
+                return NotFound();
+            }
+            else{
+                product.ProductId = editProduct.ProductId;
+                db.UpdateProduct(product: product);
+                return Ok();
+            }
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id){
-            db.DeleteProduct(id);
-            return Ok();
+            var product = db.GetProduct(id);
+            if (product == null)
+                return NotFound();
+            else
+                db.DeleteProduct(id);
+                return Ok();
         }
     }
 }

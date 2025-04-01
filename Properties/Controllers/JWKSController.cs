@@ -23,6 +23,7 @@ namespace MyApi.Controllers{
             // Retrieve all active signing keys from the database
             var keys = _context.SigningKeys.Where(k => k.IsActive).ToList();
             // Construct the JWKS (JSON Web Key Set) object
+#pragma warning disable CS8604 // Possible null reference argument.
             var jwks = new
             {
                 //kty, use, kid, alg, n, e
@@ -36,6 +37,7 @@ namespace MyApi.Controllers{
                     e = Base64UrlEncoder.Encode(GetExponent(k.PublicKey)) // Exponent (Base64URL-encoded)
                 })
             };
+#pragma warning restore CS8604 // Possible null reference argument.
             // Return the JWKS object as a JSON response with status code 200 OK
             return Ok(jwks);
         }

@@ -5,5 +5,7 @@ namespace MyApi.Data{
         public string? server{get;set;}
         public string? UserId{get;set;}
         public string? Password{get;set;}
+
+        public int Port{get;set;}
     }  
 }

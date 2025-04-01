@@ -8,5 +8,5 @@ public class Order{
     public decimal Amount {get;set;}
     public decimal Total {get;set;}
     public decimal Interest {get;set;}
-    public DateTime? OrderDate {get;set;}
+    public DateTime OrderDate {get;set;}
 }
