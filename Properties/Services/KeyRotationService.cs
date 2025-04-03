@@ -3,18 +3,18 @@ using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
 using MyApi.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MyApi.Services{
 public class KeyRotationService : BackgroundService
     {
-        // Service provider is used to create a scoped service lifetime.
-        private readonly IServiceProvider _serviceProvider;
+        private readonly UsersContextDb context;
         // Sets how frequently keys should be rotated; here it’s every 7 days.
         private readonly TimeSpan _rotationInterval = TimeSpan.FromDays(7);
-        // Constructor that accepts a service provider for dependency injection.
-        public KeyRotationService(IServiceProvider serviceProvider)
+        public KeyRotationService(IConfiguration configuration)
         {
-            _serviceProvider = serviceProvider;
+            context = new UsersContextDb(configuration);
         }
         // This method is executed when the background service starts.
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -31,12 +31,9 @@ public class KeyRotationService : BackgroundService
         // This method handles the actual key rotation logic.
         private async Task RotateKeysAsync()
         {
-            // Create a new service scope for dependency injection.
-            using var scope = _serviceProvider.CreateScope();
-            // Retrieve the database context from the service provider.
-            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             // Query the database for the currently active signing key.
-            var activeKey = await context.SigningKeys.FirstOrDefaultAsync(k => k.IsActive);
+            var activeKey = await Task.Run(() => context.SigningKeys.FirstOrDefault(k => k.IsActive));
+            // var config = scope.ServiceProvider.GetService<IConfiguration>;
             // Check if there’s no active key or if the active key is about to expire.
             if (activeKey == null || activeKey.ExpiresAt <= DateTime.UtcNow.AddDays(10))
             {
@@ -46,7 +43,7 @@ public class KeyRotationService : BackgroundService
                     // Mark the current key as inactive since it’s about to be replaced.
                     activeKey.IsActive = false;
                     // Update the current key in the database.
-                    context.SigningKeys.Update(activeKey);
+                    context.UpdateSigningKey(activeKey);
                 }
                 // Generate a new RSA key pair.
                 using var rsa = RSA.Create(2048);
@@ -67,9 +64,7 @@ public class KeyRotationService : BackgroundService
                     ExpiresAt = DateTime.UtcNow.AddYears(1) // Set the new key to expire in one year.
                 };
                 // Add the new key to the database.
-                await context.SigningKeys.AddAsync(newKey);
-                // Save the changes to the database.
-                await context.SaveChangesAsync();
+                await Task.Run(() => context.InsertSigningKey(newKey));
             }
         }
     }

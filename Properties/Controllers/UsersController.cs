@@ -1,22 +1,41 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
 using MyApi.DTOs;
 using MyApi.Models;
 
 namespace MyApi.Controllers{
-[Route("api/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly UsersContextDb _context;
 
         // Constructor injecting the ApplicationDbContext
-        public UsersController(ApplicationDbContext context)
+        public UsersController(IConfiguration configuration)
         {
-            _context = context;
+            _context = new UsersContextDb(configuration) ;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUsers(){
+
+            var users = await Task.Run(() => _context.GetUsers());
+
+            return Ok(users);
+        }
+
+        [HttpPost("SaveClient")]
+        public async Task<IActionResult> SaveClient(Client client){
+            await Task.Run(() => _context.InsertClient(client));
+
+            return Ok();
+        }
+
+        [HttpDelete("DeleteUser")]
+        public async Task<IActionResult> DeleteUser(User user){
+            await Task.Run(() => _context.DeleteUser(user.Email??""));
+            return Ok();
         }
 
         // Registers a new user.
@@ -28,10 +47,9 @@ namespace MyApi.Controllers{
             {
                 return BadRequest(ModelState);
             }
-
+            string? email = registerDto?.Email?.ToLower();
             // Check if the email already exists.
-            var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email.ToLower() == registerDto.Email.ToLower());
+            var existingUser = await Task.Run(() => _context.GetUser(email ?? ""));
 
             if (existingUser != null)
             {
@@ -39,34 +57,33 @@ namespace MyApi.Controllers{
             }
 
             // Hash the password using BCrypt.
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerDto?.Password);
 
             // Create a new user entity.
             var newUser = new User
             {
-                Firstname = registerDto.Firstname,
-                Lastname = registerDto.Lastname,
-                Email = registerDto.Email,
+                Firstname = registerDto?.Firstname,
+                Lastname = registerDto?.Lastname,
+                Email = email,
                 Password = hashedPassword
             };
 
             // Add the new user to the database.
-            _context.Users.Add(newUser);
-            await _context.SaveChangesAsync();
+            await Task.Run(() => _context.InsertUser(newUser));
 
-            // Optionally, assign a default role to the new user.
-            // For example, assign the "User" role.
-            var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
-            if (userRole != null)
-            {
-                var newUserRole = new UserRole
-                {
-                    UserId = newUser.Id,
-                    RoleId = userRole.Id
-                };
-                _context.UserRoles.Add(newUserRole);
-                await _context.SaveChangesAsync();
-            }
+            // // Optionally, assign a default role to the new user.
+            // // For example, assign the "User" role.
+            // var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
+            // if (userRole != null)
+            // {
+            //     var newUserRole = new UserRole
+            //     {
+            //         UserId = newUser.Id,
+            //         RoleId = userRole.Id
+            //     };
+            //     _context.UserRoles.Add(newUserRole);
+            //     await _context.SaveChangesAsync();
+            // }
 
             return CreatedAtAction(nameof(GetProfile), new { id = newUser.Id }, new { message = "User registered successfully." });
         }
@@ -85,29 +102,22 @@ namespace MyApi.Controllers{
 
             string userEmail = emailClaim.Value;
 
-            // Retrieve the user from the database, including roles.
-            var user = await _context.Users
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.Email.ToLower() == userEmail.ToLower());
-
+            var user = await Task.Run(() => this._context.GetUser(userEmail.ToLower()));
             if (user == null)
             {
                 return NotFound(new { message = "User not found." });
             }
 
             // Map the user entity to ProfileDTO.
-#pragma warning disable CS8604 // Possible null reference argument.
             var profile = new ProfileDTO
             {
                 Id = user.Id,
                 Email = user.Email,
                 Firstname = user.Firstname,
-                Lastname = user.Lastname,
-                Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
+                Lastname = user.Lastname
+                // ,
+                // Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
             };
-#pragma warning restore CS8604 // Possible null reference argument.
-
             return Ok(profile);
         }
 
@@ -132,8 +142,7 @@ namespace MyApi.Controllers{
             string userEmail = emailClaim.Value;
 
             // Retrieve the user from the database.
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email.ToLower() == userEmail.ToLower());
+            var user = await Task.Run(() => _context.GetUser(userEmail.ToLower()));
 
             if (user == null)
             {
@@ -154,8 +163,8 @@ namespace MyApi.Controllers{
             if (!string.IsNullOrEmpty(updateDto.Email))
             {
                 // Check if the new email is already taken by another user.
-                var emailExists = await _context.Users
-                    .AnyAsync(u => u.Email.ToLower() == updateDto.Email.ToLower() && u.Id != user.Id);
+                var emailExists = await Task.Run(() => _context.GetUsers()
+                    .Any(u => u?.Email?.ToLower() == updateDto.Email.ToLower() && u.Id != user.Id)) ;
 
                 if (emailExists)
                 {
@@ -173,8 +182,7 @@ namespace MyApi.Controllers{
             }
 
             // Save the changes to the database.
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
+            await Task.Run(() => _context.UpdateUser(user));
 
             return Ok(new { message = "Profile updated successfully." });
         }

@@ -21,16 +21,16 @@ namespace MyApi.Controllers{
         private readonly IConfiguration _configuration;
 
         // Database context for interacting with the database
-        private readonly ApplicationDbContext _context; 
+        private readonly UsersContextDb _context; 
 
         // Constructor that injects IConfiguration and ApplicationDbContext via dependency injection
-        public AuthController(IConfiguration configuration, ApplicationDbContext context)
+        public AuthController(IConfiguration configuration)
         {
             // Assign the injected IConfiguration to the private field
             _configuration = configuration;
 
             // Assign the injected ApplicationDbContext to the private field
-            _context = context; 
+            _context = new UsersContextDb(configuration); 
         }
 
         // Define the Login endpoint that responds to POST requests at 'api/Auth/Login'
@@ -45,8 +45,7 @@ namespace MyApi.Controllers{
             }
 
             // Query the Clients table to verify if the provided ClientId exists
-            var client = _context.Clients
-                .FirstOrDefault(c => c.ClientId == loginDto.ClientId);
+            var client = _context.GetClient(loginDto.ClientId??"");
 
             // If the client does not exist, return a 401 Unauthorized response
             if (client == null)
@@ -56,11 +55,12 @@ namespace MyApi.Controllers{
 
             // Retrieve the user from the Users table by matching the email (case-insensitive)
             // Also include the UserRoles and associated Roles for later use
-            var user = await _context.Users
-                .Include(u => u.UserRoles) // Include the UserRoles navigation property
-                    .ThenInclude(ur => ur.Role) // Then include the Role within each UserRole
-                .FirstOrDefaultAsync(u => u.Email.ToLower() == loginDto.Email.ToLower());
-
+            // var user = await _context.Users
+            //     .Include(u => u.UserRoles) // Include the UserRoles navigation property
+            //         .ThenInclude(ur => ur.Role) // Then include the Role within each UserRole
+            //     .FirstOrDefaultAsync(u => u.Email.ToLower() == loginDto.Email.ToLower());
+            string? email = loginDto?.Email?.ToLower();
+            var user = await Task.Run(() => _context.GetUser(email??"")); 
             // If the user does not exist, return a 401 Unauthorized response
             if (user == null)
             {
@@ -69,7 +69,7 @@ namespace MyApi.Controllers{
             }
 
             // Verify the provided password against the stored hashed password using BCrypt
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password);
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginDto?.Password, user.Password);
 
             // If the password is invalid, return a 401 Unauthorized response
             if (!isPasswordValid)
@@ -89,6 +89,7 @@ namespace MyApi.Controllers{
         private string GenerateJwtToken(User user, Client client)
         {
             // Retrieve the active signing key from the SigningKeys table
+
             var signingKey = _context.SigningKeys.FirstOrDefault(k => k.IsActive);
 
             // If no active signing key is found, throw an exception
@@ -98,9 +99,7 @@ namespace MyApi.Controllers{
             }
 
             // Convert the Base64-encoded private key string back to a byte array
-#pragma warning disable CS8604 // Possible null reference argument.
-            var privateKeyBytes = Convert.FromBase64String(signingKey.PrivateKey);
-#pragma warning restore CS8604 // Possible null reference argument.
+            var privateKeyBytes = Convert.FromBase64String(signingKey.PrivateKey??"");
 
             // Create a new RSA instance for cryptographic operations
             var rsa = RSA.Create();
@@ -119,8 +118,6 @@ namespace MyApi.Controllers{
             var creds = new SigningCredentials(rsaSecurityKey, SecurityAlgorithms.RsaSha256);
 
             // Initialize a list of claims to include in the JWT
-#pragma warning disable CS8604 // Possible null reference argument.
-#pragma warning disable CS8604 // Possible null reference argument.
             var claims = new List<Claim>
             {
                 // Subject (sub) claim with the user's ID
@@ -130,24 +127,22 @@ namespace MyApi.Controllers{
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
 
                 // Name claim with the user's first name
-                new Claim(ClaimTypes.Name, user.Firstname),
+                new Claim(ClaimTypes.Name, user.Firstname??""),
 
                 // NameIdentifier claim with the user's email
-                new Claim(ClaimTypes.NameIdentifier, user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Email??""),
 
                 // Email claim with the user's email
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email??"")
             };
-#pragma warning restore CS8604 // Possible null reference argument.
-#pragma warning restore CS8604 // Possible null reference argument.
 
             // Iterate through the user's roles and add each as a Role claim
-            foreach (var userRole in user.UserRoles)
-            {
-#pragma warning disable CS8604 // Possible null reference argument.
-                claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
-#pragma warning restore CS8604 // Possible null reference argument.
-            }
+//             foreach (var userRole in user?.UserRoles)
+//             {
+// #pragma warning disable CS8604 // Possible null reference argument.
+//                 claims.Add(new Claim(ClaimTypes.Role, userRole?.Role?.Name));
+// #pragma warning restore CS8604 // Possible null reference argument.
+//             }
 
             // Define the JWT token's properties, including issuer, audience, claims, expiration, and signing credentials
             var tokenDescriptor = new JwtSecurityToken(

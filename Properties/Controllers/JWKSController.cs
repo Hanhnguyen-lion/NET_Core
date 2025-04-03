@@ -9,12 +9,12 @@ namespace MyApi.Controllers{
     public class JWKSController : ControllerBase
     {
         // Private field to hold the database context
-        private readonly ApplicationDbContext _context;
+        private readonly UsersContextDb _context;
         // Constructor that injects the ApplicationDbContext via dependency injection
-        public JWKSController(ApplicationDbContext context)
+        public JWKSController(IConfiguration configuration)
         {
             // Assign the injected ApplicationDbContext to the private field
-            _context = context; 
+            _context = new UsersContextDb(configuration); 
         }
         // Define the JWKS endpoint that responds to GET requests at '/.well-known/jwks.json'
         [HttpGet("jwks.json")]
@@ -23,7 +23,6 @@ namespace MyApi.Controllers{
             // Retrieve all active signing keys from the database
             var keys = _context.SigningKeys.Where(k => k.IsActive).ToList();
             // Construct the JWKS (JSON Web Key Set) object
-#pragma warning disable CS8604 // Possible null reference argument.
             var jwks = new
             {
                 //kty, use, kid, alg, n, e
@@ -33,11 +32,10 @@ namespace MyApi.Controllers{
                     use = "sig",    // Usage (sig for signature)
                     kid = k.KeyId,  // Key ID to identify the key
                     alg = "RS256",  // Algorithm (RS256 for RSA SHA-256)
-                    n = Base64UrlEncoder.Encode(GetModulus(k.PublicKey)), // Modulus (Base64URL-encoded)
-                    e = Base64UrlEncoder.Encode(GetExponent(k.PublicKey)) // Exponent (Base64URL-encoded)
+                    n = Base64UrlEncoder.Encode(GetModulus(k.PublicKey??"")), // Modulus (Base64URL-encoded)
+                    e = Base64UrlEncoder.Encode(GetExponent(k.PublicKey??"")) // Exponent (Base64URL-encoded)
                 })
             };
-#pragma warning restore CS8604 // Possible null reference argument.
             // Return the JWKS object as a JSON response with status code 200 OK
             return Ok(jwks);
         }

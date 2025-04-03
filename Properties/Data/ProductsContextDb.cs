@@ -58,11 +58,11 @@ namespace MyApi.Data{
             this._dbContext?.ExecuteNonQuery(
                 sql: sql,
                 paramValues: new object[]{
-                    product.ProductName,
-                    product.Description,
+                    product.ProductName ?? "",
+                    product.Description ?? "",
                     product.Quantity,
                     product.Price,
-                    product.OrderDate
+                    product.OrderDate ?? DateTime.Now
                 }
             );
         }
@@ -81,11 +81,11 @@ namespace MyApi.Data{
                 sql: sql,
                 paramValues: new object[]{
                     product.ProductId,
-                    product.ProductName,
-                    product.Description,
+                    product.ProductName ?? "",
+                    product.Description ?? "",
                     product.Quantity,
                     product.Price,
-                    product.OrderDate
+                    product.OrderDate ?? DateTime.Now
                 }
             );
         }

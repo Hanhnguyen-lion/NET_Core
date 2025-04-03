@@ -6,7 +6,7 @@ namespace MyApi.Models{
         public int ProductId {get;set;}
 
         [Required]
-        public required string ProductName {get;set;}
+        public string? ProductName {get;set;}
         public string? Description {get;set;}
 
         [Required]
