@@ -44,7 +44,7 @@ namespace MyApi.Controllers{
                 return BadRequest(ModelState);
             }
 
-            // Query the Clients table to verify if the provided ClientId exists
+            // // Query the Clients table to verify if the provided ClientId exists
             var client = _context.GetClient(loginDto.ClientId??"");
 
             // If the client does not exist, return a 401 Unauthorized response
@@ -79,14 +79,14 @@ namespace MyApi.Controllers{
             }
 
             // At this point, authentication is successful. Proceed to generate a JWT token.
-            var token = GenerateJwtToken(user, client);
+            var token = GenerateJwtToken(user);
 
             // Return the generated token in a 200 OK response
             return Ok(new { Token = token });
         }
 
         // Private method responsible for generating a JWT token for an authenticated user
-        private string GenerateJwtToken(User user, Client client)
+        private string GenerateJwtToken(User user)
         {
             // Retrieve the active signing key from the SigningKeys table
 
@@ -147,7 +147,7 @@ namespace MyApi.Controllers{
             // Define the JWT token's properties, including issuer, audience, claims, expiration, and signing credentials
             var tokenDescriptor = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"], // The token issuer, typically your application's URL
-                audience: client.ClientURL, // The intended recipient of the token, typically the client's URL
+                // audience: client.ClientURL, // The intended recipient of the token, typically the client's URL
                 claims: claims, // The list of claims to include in the token
                 expires: DateTime.UtcNow.AddHours(1), // Token expiration time set to 1 hour from now
                 signingCredentials: creds // The credentials used to sign the token
