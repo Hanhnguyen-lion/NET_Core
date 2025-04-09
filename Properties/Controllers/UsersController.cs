@@ -33,7 +33,7 @@ namespace MyApi.Controllers{
         }
 
         [HttpDelete("DeleteUser")]
-        public async Task<IActionResult> DeleteUser(User user){
+        public async Task<IActionResult> DeleteUser(UserDTO user){
             await Task.Run(() => _context.DeleteUser(user.Email??""));
             return Ok();
         }
@@ -84,8 +84,7 @@ namespace MyApi.Controllers{
             //     _context.UserRoles.Add(newUserRole);
             //     await _context.SaveChangesAsync();
             // }
-
-            return CreatedAtAction(nameof(GetProfile), new { id = newUser.Id }, new { message = "User registered successfully." });
+            return Ok(new { message = "User registered successfully." });
         }
 
         // Retrieves the authenticated user's profile.
