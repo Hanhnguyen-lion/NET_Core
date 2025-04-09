@@ -13,7 +13,7 @@ namespace MyApi.DTOs{
         [MaxLength(100, ErrorMessage = "Password must be less than or equal 100 characters.")]
         public string? Password{get;set;}
         
-        [Required(ErrorMessage = "ClientId is required.")]
-        public string? ClientId{get;set;}
+        // [Required(ErrorMessage = "ClientId is required.")]
+        // public string? ClientId{get;set;}
     }    
 }

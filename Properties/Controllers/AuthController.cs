@@ -44,14 +44,14 @@ namespace MyApi.Controllers{
                 return BadRequest(ModelState);
             }
 
-            // // Query the Clients table to verify if the provided ClientId exists
-            var client = _context.GetClient(loginDto.ClientId??"");
+            // // // Query the Clients table to verify if the provided ClientId exists
+            // var client = _context.GetClient(loginDto.ClientId??"");
 
-            // If the client does not exist, return a 401 Unauthorized response
-            if (client == null)
-            {
-                return Unauthorized("Invalid client credentials.");
-            }
+            // // If the client does not exist, return a 401 Unauthorized response
+            // if (client == null)
+            // {
+            //     return Unauthorized("Invalid client credentials.");
+            // }
 
             // Retrieve the user from the Users table by matching the email (case-insensitive)
             // Also include the UserRoles and associated Roles for later use
@@ -149,7 +149,7 @@ namespace MyApi.Controllers{
                 issuer: _configuration["Jwt:Issuer"], // The token issuer, typically your application's URL
                 // audience: client.ClientURL, // The intended recipient of the token, typically the client's URL
                 claims: claims, // The list of claims to include in the token
-                expires: DateTime.UtcNow.AddHours(1), // Token expiration time set to 1 hour from now
+                expires: DateTime.UtcNow.AddMinutes(30), // Token expiration time set to 1 hour from now
                 signingCredentials: creds // The credentials used to sign the token
             );
 
