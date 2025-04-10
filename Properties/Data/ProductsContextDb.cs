@@ -54,7 +54,6 @@ namespace MyApi.Data{
 
         public void InsertProduct(Product product){
             string sql = @"select insert_product(@v_product_name, @v_description, @v_quantity, @v_price, @v_order_date)"; 
-
             this._dbContext?.ExecuteNonQuery(
                 sql: sql,
                 paramValues: new object[]{

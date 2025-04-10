@@ -37,8 +37,9 @@ services.AddCors(options =>
 services.AddHostedService<KeyRotationService>();
 
 services.AddAuthentication(options =>{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = 
+    options.DefaultChallengeScheme = 
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 
 })
 .AddJwtBearer(options =>

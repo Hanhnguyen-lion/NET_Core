@@ -65,7 +65,7 @@ namespace MyApi.Controllers{
             if (user == null)
             {
                 // For security reasons, avoid specifying whether the client or user was invalid
-                return Unauthorized("Invalid credentials.");
+                return Unauthorized(new {message = "Invalid credentials."});
             }
 
             // Verify the provided password against the stored hashed password using BCrypt
@@ -75,7 +75,7 @@ namespace MyApi.Controllers{
             if (!isPasswordValid)
             {
                 // Again, avoid specifying whether the client or user was invalid
-                return Unauthorized("Invalid credentials.");
+                return Unauthorized(new {message = "Invalid credentials."} );
             }
 
             // At this point, authentication is successful. Proceed to generate a JWT token.
