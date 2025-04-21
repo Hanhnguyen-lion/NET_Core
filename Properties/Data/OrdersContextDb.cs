@@ -33,6 +33,57 @@ namespace MyApi.Data{
 
             return orders;
         }
+
+        public IEnumerable<Order> GetInterests(){
+            string sql = @"select * from get_interests()"; 
+            List<Order> orders = new List<Order>();
+            
+            var db = this._dbContext?.ExecuteReader<Order>(
+                sql: sql,
+                fetcher: (reader) => {
+                    var order = new Order{
+                                Id = reader.Get<int>("id"),
+                                ProductId = reader.Get<int>("product_id"),
+                                Description =  reader.Get<string>("description"),
+                                Quantity = reader.Get<int>("quantity"),
+                                Amount = reader.Get<decimal>("amount"),
+                                Price = reader.Get<decimal>("price"),
+                                Interest = reader.Get<decimal>("interest"),
+                                Total = reader.Get<decimal>("total"),
+                                OrderDate = reader.Get<DateTime>("order_date")
+                            };
+                    orders.Add(order);
+                    return order;
+            });
+
+            return orders;
+        }
+
+        public IEnumerable<Inventory> GetInventory(){
+            string sql = @"select * from get_inventory()"; 
+            List<Inventory> items = new List<Inventory>();
+            
+            var db = this._dbContext?.ExecuteReader<Inventory>(
+                sql: sql,
+                fetcher: (reader) => {
+                    var item = new Inventory{
+                                ProductId = reader.Get<int>("product_id"),
+                                ProductName =  reader.Get<string>("product_name"),
+                                Description =  reader.Get<string>("description"),
+                                Quantity = reader.Get<int>("quantity"),
+                                OrderQuantity = reader.Get<int>("order_quantity"),
+                                Price = reader.Get<decimal>("price"),
+                                InventoryQuantity = reader.Get<int>("inventory_quantity"),
+                                Total = reader.Get<decimal>("total"),
+                                OrderDate = reader.Get<DateTime>("order_date")
+                            };
+                    items.Add(item);
+                    return item;
+            });
+
+            return items;
+        }
+
         public Order? GetOrder(int id){
             string sql = @"select * from get_order(@v_id)"; 
             

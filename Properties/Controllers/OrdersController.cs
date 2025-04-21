@@ -20,6 +20,18 @@ namespace MyApi.Controllers{
             return Ok(orders);
         }
 
+        [HttpGet("GetInterests")] 
+        public ActionResult<IEnumerable<Order>> GetInterests(){
+            List<Order> orders = db.GetInterests().ToList<Order>();
+            return Ok(orders);
+        }
+
+        [HttpGet("Inventories")] 
+        public ActionResult<IEnumerable<Inventory>> GetInventories(){
+            List<Inventory> items = db.GetInventory().ToList<Inventory>();
+            return Ok(items);
+        }
+
         [HttpGet("{id}")]
         public ActionResult<Order> Get(int id){
             var order = db.GetOrder(id);
