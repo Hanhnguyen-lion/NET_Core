@@ -75,6 +75,7 @@ namespace MyApi.Data{
                                 Price = reader.Get<decimal>("price"),
                                 InventoryQuantity = reader.Get<int>("inventory_quantity"),
                                 Total = reader.Get<decimal>("total"),
+                                Interest = reader.Get<decimal>("interests"),
                                 OrderDate = reader.Get<DateTime>("order_date")
                             };
                     items.Add(item);

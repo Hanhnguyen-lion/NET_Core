@@ -6,6 +6,8 @@ namespace MyApi.Models{
         public int Quantity{get;set;}
         public decimal Price{get;set;}
         public decimal Total{get;set;}
+        public decimal Interest{get;set;}
+
         public int OrderQuantity{get;set;}
         public int InventoryQuantity{get;set;}
 
